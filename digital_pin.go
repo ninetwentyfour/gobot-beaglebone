@@ -3,6 +3,7 @@ package gobotBeaglebone
 import (
 	"os"
 	"strconv"
+	"strings"
 )
 
 type digitalPin struct {
@@ -55,10 +56,6 @@ func (d *digitalPin) setMode(mode string) {
 		}
 		fi.WriteString(GPIO_DIRECTION_READ)
 		fi.Close()
-		d.PinFile, err = os.OpenFile(GPIO_PATH+"/gpio"+d.PinNum+"/value", os.O_RDONLY, 0666)
-		if err != nil {
-			panic(err)
-		}
 	}
 }
 
@@ -69,6 +66,25 @@ func (d *digitalPin) digitalWrite(value string) {
 
 	d.PinFile.WriteString(value)
 	d.PinFile.Sync()
+}
+
+func (d *digitalPin) digitalRead() int {
+	if d.Mode != "r" {
+		d.setMode("r")
+	}
+
+	var err error
+	d.PinFile, err = os.OpenFile(GPIO_PATH+"/gpio"+d.PinNum+"/value", os.O_RDWR, 0666)
+	if err != nil {
+		panic(err)
+	}
+
+	var buf []byte = make([]byte, 1024)
+	d.PinFile.Read(buf)
+	d.PinFile.Close()
+
+	i, _ := strconv.Atoi(strings.Split(string(buf), "\n")[0])
+	return i
 }
 
 func (d *digitalPin) close() {

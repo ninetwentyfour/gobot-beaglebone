@@ -132,10 +132,7 @@ func (b *Beaglebone) Reconnect() bool  { return true }
 func (b *Beaglebone) Disconnect() bool { return true }
 
 func (b *Beaglebone) PwmWrite(pin string, val byte) {
-	i := b.pwmPin(pin)
-	period := 500000.0
-	duty := gobot.FromScale(float64(^val), 0, 255.0)
-	b.pwmPins[i].pwmWrite(strconv.Itoa(int(period)), strconv.Itoa(int(period*duty)))
+	b.pwmWrite(pin, val)
 }
 
 func (b *Beaglebone) InitServo() {}
@@ -146,6 +143,11 @@ func (b *Beaglebone) ServoWrite(pin string, val byte) {
 	b.pwmPins[i].pwmWrite(strconv.Itoa(int(period)), strconv.Itoa(int(period*duty)))
 }
 
+func (b *Beaglebone) DigitalRead(pin string) int {
+	i := b.digitalPin(pin, "r")
+	return b.digitalPins[i].digitalRead()
+}
+
 func (b *Beaglebone) DigitalWrite(pin string, val byte) {
 	i := b.digitalPin(pin, "w")
 	b.digitalPins[i].digitalWrite(strconv.Itoa(int(val)))
@@ -154,6 +156,10 @@ func (b *Beaglebone) DigitalWrite(pin string, val byte) {
 func (b *Beaglebone) AnalogRead(pin string) int {
 	i := b.analogPin(pin)
 	return b.analogPins[i].analogRead()
+}
+
+func (b *Beaglebone) AnalogWrite(pin string, val byte) {
+	b.pwmWrite(pin, val)
 }
 
 func (b *Beaglebone) I2cStart(address byte) {
@@ -218,4 +224,11 @@ func (b *Beaglebone) pwmPin(pin string) string {
 		b.pwmPins[i] = newPwmPin(i)
 	}
 	return i
+}
+
+func (b *Beaglebone) pwmWrite(pin string, val byte) {
+	i := b.pwmPin(pin)
+	period := 500000.0
+	duty := gobot.FromScale(float64(^val), 0, 255.0)
+	b.pwmPins[i].pwmWrite(strconv.Itoa(int(period)), strconv.Itoa(int(period*duty)))
 }
